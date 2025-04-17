@@ -3,6 +3,11 @@ from uuid import uuid4
 from pathlib import Path
 from presentation import PresentationManager
 import os
+from threading import Thread
+from flask import jsonify
+
+generation_status = {}           # {pres_id: "in‑progress" | "done" | "error"}
+
 
 app = Flask(__name__)
 
@@ -12,17 +17,6 @@ pm = PresentationManager()
 def index():
     return render_template("index.html")
 
-@app.route("/generate", methods=["POST"])
-def generate():
-    topic = request.form.get("topic", "").strip()
-    depth = request.form.get("depth", "intro").strip()
-    if not topic:
-        return "Topic required", 400
-
-    pres_id = uuid4().hex
-    pm.generate(topic, depth, pres_id)  # synchronous for POC
-
-    return redirect(url_for("player", pres_id=pres_id))
 
 @app.route("/presentations/<pres_id>/")
 def player(pres_id):
@@ -36,6 +30,29 @@ def player(pres_id):
 def pres_asset(pres_id, filename):
     base = Path(app.root_path) / "static" / "generated" / pres_id
     return send_from_directory(base, filename)
+def _run_generation(topic, depth, pres_id):
+    try:
+        pm.generate(topic, depth, pres_id)
+        generation_status[pres_id] = "done"
+    except Exception as e:
+        generation_status[pres_id] = f"error: {e}"
 
+@app.route("/generate", methods=["POST"])
+def generate():
+    topic = request.form["topic"].strip()
+    depth = request.form["depth"].strip()
+    pres_id = uuid4().hex
+    generation_status[pres_id] = "in‑progress"
+    Thread(target=_run_generation, args=(topic, depth, pres_id), daemon=True).start()
+    return redirect(url_for("generating", pres_id=pres_id))
+
+@app.route("/generating/<pres_id>/")
+def generating(pres_id):
+    return render_template("generating.html", pres_id=pres_id)
+
+@app.route("/status/<pres_id>.json")
+def status(pres_id):
+    return jsonify({"state": generation_status.get(pres_id, "unknown")})
+    
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=int(os.getenv("PORT", 5000)))

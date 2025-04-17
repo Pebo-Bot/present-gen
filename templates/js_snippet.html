@@ -1,0 +1,23 @@
+<!-- BEGIN POC JS snippet -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@4/dist/theme/black.css" />
+<style>
+  .player-controls{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:1001}
+  .player-controls button{margin:0 5px;padding:0.4rem 0.8rem;font-size:0.9rem;border:none;border-radius:4px;background:rgba(0,0,0,.6);color:#fff;cursor:pointer}
+</style>
+<div class="player-controls">
+  <button id="btn-pause">Pause</button>
+  <button id="btn-restart">Restart</button>
+  <button id="btn-mute">Mute</button>
+  <button id="btn-exit">Exit</button>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@4/dist/reveal.js"></script>
+<script>
+ const audio=new Audio();let isMuted=!1,isPaused=!1;function playSlide(){const e=Reveal.getCurrentSlide().dataset.audio;e&&(audio.src!==e&&(audio.src=e),audio.muted=isMuted,audio.play(),document.getElementById("btn-pause").textContent="Pause")}
+ Reveal.initialize({controls:!0,history:!0,slideNumber:!0});Reveal.on("ready",playSlide);Reveal.on("slidechanged",playSlide);
+ const p=document.getElementById("btn-pause"),r=document.getElementById("btn-restart"),m=document.getElementById("btn-mute"),x=document.getElementById("btn-exit");
+ p.onclick=()=>{isPaused?(audio.play(),Reveal.toggleAutoSlide(),p.textContent="Pause"):(audio.pause(),Reveal.toggleAutoSlide(),p.textContent="Play"),isPaused=!isPaused};
+ r.onclick=()=>{Reveal.slide(0),audio.currentTime=0,playSlide()};
+ m.onclick=()=>{isMuted=!isMuted,audio.muted=isMuted,m.textContent=isMuted?"Unmute":"Mute"};
+ x.onclick=()=>{window.location.href="/"};
+</script>
+<!-- END snippet -->

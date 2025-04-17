@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Presentation POC</title>
+    <style>
+      body{font-family:system-ui,sans-serif;display:flex;height:100vh;align-items:center;justify-content:center;}
+      form{display:flex;flex-direction:column;gap:.5rem;width:300px;}
+      input,select,button{padding:.4rem;font-size:1rem;}
+      button{cursor:pointer;}
+    </style>
+  </head>
+  <body>
+    <form action="/generate" method="post">
+      <label>Topic <input name="topic" required /></label>
+      <label>Depth
+        <select name="depth">
+          <option value="intro">Intro</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </label>
+      <button type="submit">Generate</button>
+    </form>
+  </body>
+</html>

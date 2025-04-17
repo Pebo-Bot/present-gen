@@ -26,8 +26,9 @@ class PresentationManager:
         audio_dir.mkdir(exist_ok=True)
 
         slides_json, md = self._create_outline(topic, depth)
+        narrations      = self._create_narrations(slides_json)
         html_path = self._markdown_to_reveal(md, len(slides_json['slides']), slides_dir)
-        self._create_audio(slides_json, audio_dir)
+        self._create_audio(narrations, audio_dir)   # pass narrations list
         print(f"Presentation ready → {html_path.relative_to(self.base_dir.parent)}")
 
     # ----------------- helpers -----------------
@@ -53,6 +54,18 @@ class PresentationManager:
 
         slides_json = json.loads(json_part)
         return slides_json, md_part
+
+    def _create_narrations(self, slides_json):
+        resp = self.client.responses.create(
+            model=OPENAI_MODEL_LLM,
+            instructions=(
+                "You are an expert narrator. For each slide JSON object give a"
+                " spoken‑word narration string that briefly explains the materials on the slide concering the topic {topic}. Respond ONLY with JSON:"
+                "{ narrations:[{slide_index:int,text:str},...] }"
+            ),
+            input=json.dumps(slides_json["slides"]),
+        )
+        return json.loads(resp.output_text)["narrations"]
 
     def _markdown_to_reveal(self, md: str, slide_count: int, out_dir: Path) -> Path:
         # 1) Generate raw HTML via Pandoc
@@ -97,9 +110,10 @@ class PresentationManager:
 
 
     def _create_audio(self, slides_json: dict, audio_dir: Path):
-        slides = slides_json.get("slides", [])
-        for idx, slide in enumerate(slides):
-            raw_content = slide.get("content", "")
+        
+        for item in narrations:
+            idx  = item["slide_index"]
+            text = item["text"]
 
             # Ensure we have a string, not a list
             if isinstance(raw_content, list):

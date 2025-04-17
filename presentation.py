@@ -82,13 +82,21 @@ class PresentationManager:
     def _create_audio(self, slides_json: dict, audio_dir: Path):
         slides = slides_json.get("slides", [])
         for idx, slide in enumerate(slides):
-            text = slide.get("content", "")
+            raw_content = slide.get("content", "")
+
+            # Ensure we have a string, not a list
+            if isinstance(raw_content, list):
+                text = " \n".join(raw_content)
+            else:
+                text = str(raw_content)
+
             out_file = audio_dir / f"slide{idx}.mp3"
             with self.client.audio.speech.with_streaming_response.create(
                 model=OPENAI_MODEL_TTS,
-                input=text,
+                input=text,                # now guaranteed to be a string
                 voice=VOICE,
                 instructions="Narrate the following text in a clear, engaging tone with natural pacing.",
                 response_format="mp3",
             ) as r:
                 r.stream_to_file(out_file)
+

@@ -116,10 +116,10 @@ class PresentationManager:
             text = item["text"]
 
             # Ensure we have a string, not a list
-            if isinstance(raw_content, list):
-                text = " \n".join(raw_content)
-            else:
-                text = str(raw_content)
+            #if isinstance(text, list):
+            #    text = " \n".join(raw_content)
+            #else:
+            #    text = str(text)
 
             out_file = audio_dir / f"slide{idx}.mp3"
             with self.client.audio.speech.with_streaming_response.create(

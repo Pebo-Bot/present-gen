@@ -1,0 +1,4 @@
+Flask>=2.3
+openai>=1.14
+pypandoc>=1.12
+python-dotenv>=1.0

@@ -109,7 +109,7 @@ class PresentationManager:
         return html_final
 
 
-    def _create_audio(self, slides_json: dict, audio_dir: Path):
+    def _create_audio(self, narrations, audio_dir):
         
         for item in narrations:
             idx  = item["slide_index"]

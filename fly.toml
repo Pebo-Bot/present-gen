@@ -1,11 +1,5 @@
 app = "present-gen"
 
-[build]
-  builder    = "paketobuildpacks/builder:base"
-  buildpacks = [
-    "paketo-buildpacks/apt",     # <-- installs Aptfile packages
-    "paketo-buildpacks/python"   # <-- your Python runtime
-  ]
 
 [env]
   FLASK_ENV = "production"

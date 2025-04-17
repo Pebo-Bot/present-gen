@@ -1,0 +1,9 @@
+<h1>Generating…</h1>
+<script>
+  const id = "{{ pres_id }}";
+  setInterval(async () => {
+    const s = await fetch(`/status/${id}.json`).then(r=>r.json());
+    if (s.state === "done") location.href = `/presentations/${id}/`;
+    if (s.state.startsWith("error")) document.body.textContent = s.state;
+  }, 2000);
+</script>

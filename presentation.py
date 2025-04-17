@@ -55,6 +55,7 @@ class PresentationManager:
         return slides_json, md_part
 
     def _markdown_to_reveal(self, md: str, slide_count: int, out_dir: Path) -> Path:
+        # 1) Generate raw HTML via Pandoc
         html_tmp = out_dir / "raw.html"
         pypandoc.convert_text(
             md,
@@ -62,30 +63,38 @@ class PresentationManager:
             format="md",
             outputfile=str(html_tmp),
             extra_args=[
-              "-t", "revealjs", "-s",
-              "--metadata", "title=Deck",
-              # point Pandoc at jsDelivr, not Unpkg:
-              "-V", "revealjs-url=https://cdn.jsdelivr.net/npm/reveal.js@4.6.1",
-              # (optional) set your theme explicitly
-              "-V", "revealjs-theme=black"
+                "-t", "revealjs", "-s",
+                "--metadata", "title=Deck",
+                "-V", "revealjs-url=https://cdn.jsdelivr.net/npm/reveal.js@4.6.1",
+                "-V", "revealjs-theme=black"
             ],
         )
-
+    
+        # 2) Read it and split on <section>
         html_final = out_dir / "index.html"
-        audio_attrs = [
-            f'data-audio="../audio/slide{i}.mp3" data-autoslide="5000"'
-            for i in range(slide_count)
-        ]
-        html_txt = html_tmp.read_text(encoding="utf8")
-        for attr in audio_attrs:
-            html_txt = html_txt.replace("<section", f"<section {attr}", 1)
-        # insert js snippet
-        snippet_path = Path(__file__).parent / "templates" / "js_snippet.html"
-        js_snippet = snippet_path.read_text()
-        html_txt = html_txt.replace("</body>", js_snippet + "\n</body>")
-        html_final.write_text(html_txt, encoding="utf8")
+        html_txt    = html_tmp.read_text(encoding="utf8")
+        parts       = html_txt.split("<section")
+        rebuilt     = parts[0]
+    
+        # 3) Rebuild each section with the correct audio attrs
+        for idx, fragment in enumerate(parts[1:]):
+            if idx < slide_count:
+                rebuilt += (
+                    f'<section data-audio="../audio/slide{idx}.mp3" data-autoslide="5000"'
+                    + fragment
+                )
+            else:
+                rebuilt += "<section" + fragment
+    
+        # 4) Inject your JS snippet before </body>
+        js_snippet = (Path(__file__).parent / "templates" / "js_snippet.html").read_text()
+        rebuilt = rebuilt.replace("</body>", js_snippet + "\n</body>")
+    
+        # 5) Write and clean up
+        html_final.write_text(rebuilt, encoding="utf8")
         html_tmp.unlink(missing_ok=True)
         return html_final
+
 
     def _create_audio(self, slides_json: dict, audio_dir: Path):
         slides = slides_json.get("slides", [])

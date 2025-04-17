@@ -1,4 +1,4 @@
-import json, os, re, textwrap
+import json, os, re
 from pathlib import Path
 import pypandoc
 from openai import OpenAI
@@ -9,7 +9,12 @@ VOICE = "alloy"
 
 class PresentationManager:
     def __init__(self):
-        self.client = OpenAI()
+        # Retrieve OpenAI API key from environment
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise EnvironmentError("OPENAI_API_KEY environment variable not set")
+        # Initialize OpenAI client with explicit API key
+        self.client = OpenAI(api_key=api_key)
         self.base_dir = Path(__file__).parent / "static" / "generated"
         self.base_dir.mkdir(parents=True, exist_ok=True)
 

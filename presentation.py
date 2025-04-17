@@ -61,8 +61,16 @@ class PresentationManager:
             to="html",
             format="md",
             outputfile=str(html_tmp),
-            extra_args=["-t", "revealjs", "-s", "--metadata", "title=Deck"],
+            extra_args=[
+              "-t", "revealjs", "-s",
+              "--metadata", "title=Deck",
+              # point Pandoc at jsDelivr, not Unpkg:
+              "-V", "revealjs-url=https://cdn.jsdelivr.net/npm/reveal.js@4.6.1",
+              # (optional) set your theme explicitly
+              "-V", "revealjs-theme=black"
+            ],
         )
+
         html_final = out_dir / "index.html"
         audio_attrs = [
             f'data-audio="../audio/slide{i}.mp3" data-autoslide="5000"'
